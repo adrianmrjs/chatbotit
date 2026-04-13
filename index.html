@@ -5,16 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkyBot IT | Flybondi</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-    :root { --fb-yellow: #f6c002; --fb-black: #1d1d1b; --fb-bg: #f8f9fa; }
-    body { font-family: 'Inter', sans-serif; background: var(--fb-bg); height: 100vh; display: flex; flex-direction: column; margin: 0; }
-    header { background: var(--fb-yellow); padding: 12px 25px; border-bottom: 2px solid var(--fb-black); font-weight: 800; display: flex; justify-content: space-between; align-items: center;}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    :root { --fb-yellow: #f6c002; --fb-black: #1d1d1b; --fb-bg: #f8f9fa; --sidebar-width: 320px; }
+    body { font-family: 'Inter', sans-serif; background: var(--fb-bg); height: 100vh; display: flex; flex-direction: column; margin: 0; overflow: hidden; }
     
-    #chat { flex: 1; overflow-y: auto; padding: 25px 15px; display: flex; flex-direction: column; gap: 20px; max-width: 900px; margin: 0 auto; width: 100%; scroll-behavior: smooth; }
+    header { background: var(--fb-yellow); padding: 12px 25px; border-bottom: 2px solid var(--fb-black); font-weight: 800; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+    
+    .app-container { display: flex; flex: 1; overflow: hidden; }
+    
+    /* SIDEBAR UX */
+    .sidebar { width: var(--sidebar-width); background: white; border-right: 1px solid #e9ecef; display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar-header { padding: 12px 20px; background: #fcfcfc; border-bottom: 1px solid #e9ecef; font-weight: 700; font-size: 0.85rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+    .accordion-button { font-weight: 700; color: var(--fb-black); background-color: white !important; box-shadow: none !important; }
+    .accordion-button:not(.collapsed) { background-color: #fffdf5 !important; }
+    
+    .subcat-title { font-size: 0.75rem; color: #adb5bd; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin: 15px 15px 5px 15px; }
+    .menu-item { padding: 8px 15px 8px 20px; margin: 2px 10px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: #495057; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+    .menu-item:hover { background: #f1f3f5; color: var(--fb-black); font-weight: 600; }
+    .menu-item i { color: var(--fb-yellow); font-size: 0.7rem; }
+
+    /* BOTÓN REFRESH */
+    .btn-refresh { background: transparent; border: 1px solid #dee2e6; border-radius: 6px; padding: 4px 8px; color: #6c757d; cursor: pointer; transition: 0.2s; }
+    .btn-refresh:hover { background: #e9ecef; color: var(--fb-black); }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .spin-anim { animation: spin 1s linear infinite; }
+
+    .chat-section { flex: 1; display: flex; flex-direction: column; position: relative; background: var(--fb-bg); }
+    #chat { flex: 1; overflow-y: auto; padding: 25px 20px; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
     
     .msg-group { display: flex; gap: 12px; max-width: 85%; align-items: flex-start; animation: fadeIn 0.3s ease-out; }
     .user-group { align-self: flex-end; flex-direction: row-reverse; }
@@ -29,22 +51,18 @@
     .btn-action { background: white; border: 1.5px solid var(--fb-yellow); border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--fb-black); }
     .btn-action:hover { background: var(--fb-yellow); transform: translateY(-2px); }
 
-    /* CONTENEDOR INPUT + SUGERENCIAS */
-    .input-area-wrapper { position: relative; background: white; border-top: 1px solid #e9ecef; padding: 20px; }
-    
-    #suggestions { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 850px; background: white; border-radius: 12px; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); z-index: 1000; border: 1px solid #e9ecef; max-height: 250px; overflow-y: auto; margin-bottom: 10px; }
-    .sug-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #f8f9fa; font-size: 0.95rem; display: flex; align-items: center; transition: 0.2s; }
-    .sug-item i { margin-right: 10px; color: #adb5bd; }
+    .input-area-wrapper { background: white; border-top: 1px solid #e9ecef; padding: 20px; position: relative; }
+    #suggestions { display: none; position: absolute; bottom: 100%; left: 0; width: 100%; background: white; border-radius: 12px 12px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 1000; border: 1px solid #e9ecef; border-bottom: none; max-height: 200px; overflow-y: auto; }
+    .sug-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #f8f9fa; font-size: 0.95rem; transition: 0.2s; }
     .sug-item:hover { background: #fffdf5; }
-    .sug-item:hover i { color: var(--fb-yellow); }
 
-    .input-box { max-width: 850px; margin: 0 auto; display: flex; gap: 12px; background: #f8f9fa; padding: 8px 8px 8px 20px; border-radius: 15px; border: 1px solid #e9ecef; transition: 0.3s; }
-    .input-box:focus-within { border-color: var(--fb-yellow); background: white; box-shadow: 0 0 0 4px rgba(246, 192, 2, 0.1); }
+    .input-box { display: flex; gap: 12px; background: #f8f9fa; padding: 8px 8px 8px 20px; border-radius: 15px; border: 1px solid #e9ecef; transition: 0.3s; }
+    .input-box:focus-within { border-color: var(--fb-yellow); background: white; }
     input { flex: 1; border: none; background: transparent; outline: none; font-size: 1rem; color: var(--fb-black); }
-    .btn-send { background: var(--fb-yellow); border: none; border-radius: 10px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.2s; color: var(--fb-black); cursor: pointer; }
+    .btn-send { background: var(--fb-yellow); border: none; border-radius: 10px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.2s; cursor: pointer; }
     .btn-send:hover { background: var(--fb-black); color: var(--fb-yellow); }
 
-    #typing { display: none; margin: 0 auto 15px auto; font-size: 0.85rem; color: #6c757d; font-weight: 500; text-align: center; }
+    #typing { display: none; margin: 0 auto 10px auto; font-size: 0.85rem; color: #6c757d; font-weight: 500; text-align: center; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
@@ -55,31 +73,47 @@
     <i class="bi bi-airplane-engines-fill fs-4"></i>
     <h1 style="font-size: 1.2rem; margin: 0;">SKYBOT <span style="font-weight: 400;">SUPPORT</span></h1>
   </div>
-  <span id="status-badge" class="badge bg-danger">Desconectado</span>
+  <span id="status-badge" class="badge bg-danger">Iniciando...</span>
 </header>
 
-<div id="chat">
-  <div class="msg-group bot-group">
-    <div class="avatar bot-avatar"><i class="bi bi-robot"></i></div>
-    <div class="msg-content">
-      <div class="bubble bot-bubble">¡Hola! Soy SkyBot. ¿Qué problema técnico tienes hoy con la infraestructura? Puedes escribir para ver sugerencias.</div>
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div><i class="bi bi-journal-text me-2"></i> Directorio</div>
+      <button id="btn-refresh" class="btn-refresh" onclick="forceRefresh()" title="Actualizar datos">
+        <i class="bi bi-arrow-clockwise" id="refresh-icon"></i>
+      </button>
     </div>
-  </div>
-</div>
+    <div class="accordion accordion-flush" id="menu-accordion">
+      <div style="padding: 20px; text-align: center; color: #adb5bd; font-size: 0.9rem;">Cargando base de conocimiento...</div>
+    </div>
+  </aside>
 
-<div id="typing"><span class="spinner-grow spinner-grow-sm text-warning" role="status"></span> SkyBot está analizando...</div>
+  <section class="chat-section">
+    <div id="chat">
+      <div class="msg-group bot-group">
+        <div class="avatar bot-avatar"><i class="bi bi-robot"></i></div>
+        <div class="msg-content">
+          <div class="bubble bot-bubble">¡Hola, Master! Podes escribir tu problema, buscar sugerencias, o navegar por el <b>Directorio</b> de la izquierda.</div>
+        </div>
+      </div>
+    </div>
 
-<div class="input-area-wrapper">
-  <div id="suggestions"></div>
-  <div class="input-box">
-    <input id="input" placeholder="Escribe tu duda (Ej: clientes wifi)..." autocomplete="off" disabled>
-    <button id="send-btn" class="btn-send" onclick="handleSend()" disabled><i class="bi bi-send-fill"></i></button>
-  </div>
+    <div id="typing"><span class="spinner-grow spinner-grow-sm text-warning" role="status"></span> Procesando...</div>
+
+    <div class="input-area-wrapper">
+      <div id="suggestions"></div>
+      <div class="input-box">
+        <input id="input" placeholder="Escribe tu duda o selecciona del menú..." autocomplete="off" disabled>
+        <button id="send-btn" class="btn-send" onclick="handleSend()" disabled><i class="bi bi-send-fill"></i></button>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
-  // ⚠️ REEMPLAZA ESTA URL CON TU NUEVO DEPLOYMENT ⚠️
-  const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyUklB23YxWoXLThGrvbpjTAjpttzeBTeg0tV-Ube7ZEYX8YWZgDDSwTXXjkE-iY8g00A/exec"; 
+  // ⚠️ REEMPLAZA ESTA URL CON LA TUYA ⚠️
+  const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz1CbtEPrTUOPO8AFuAmmBo5G4j1KNFuVaEWp8pZ2i9X4DwTOm0XjbHMMSL_NGyI0TgtA/exec"; 
 
   const chat = document.getElementById("chat");
   const input = document.getElementById("input");
@@ -87,19 +121,28 @@
   const typing = document.getElementById("typing");
   const badge = document.getElementById("status-badge");
   const sendBtn = document.getElementById("send-btn");
+  const menuAccordion = document.getElementById("menu-accordion");
+  const refreshIcon = document.getElementById("refresh-icon");
   let listadoKeywords = [];
 
-  // 1. CARGAR SUGERENCIAS AL INICIAR (USANDO POST)
-  window.onload = async () => {
+  window.onload = () => cargarDatos("init");
+
+  // FUNCIÓN PARA CARGAR / REFRESCAR DATOS
+  async function cargarDatos(tipoLlamada) {
     try {
-      const res = await fetch(URL_SCRIPT, {
-        method: "POST",
-        body: JSON.stringify({ type: "init" })
-      });
+      if (tipoLlamada === "refresh") {
+        refreshIcon.classList.add("spin-anim"); // Inicia animación
+        badge.className = "badge bg-warning";
+        badge.innerText = "Actualizando...";
+      }
+
+      const res = await fetch(URL_SCRIPT, { method: "POST", body: JSON.stringify({ type: tipoLlamada }) });
       const data = await res.json();
       
       if (data.status === "ok") {
         listadoKeywords = data.keywords;
+        renderMenu3Niveles(data.menu);
+        
         badge.className = "badge bg-success";
         badge.innerText = "Conectado";
         input.disabled = false;
@@ -109,39 +152,80 @@
     } catch (e) {
       badge.className = "badge bg-danger";
       badge.innerText = "Error de Red";
-      console.error("Error cargando sugerencias:", e);
+      menuAccordion.innerHTML = `<div style="padding: 20px; color: red;">Error al cargar el directorio.</div>`;
+    } finally {
+      refreshIcon.classList.remove("spin-anim"); // Detiene animación
     }
-  };
+  }
 
-  // 2. LÓGICA AUTOCOMPLETE
+  // AL HACER CLIC EN EL BOTÓN REFRESH
+  function forceRefresh() {
+    cargarDatos("refresh");
+  }
+
+  // RENDER MENÚ 3 NIVELES
+  function renderMenu3Niveles(menuData) {
+    menuAccordion.innerHTML = "";
+    let i = 0;
+    
+    for (const [categoria, subcategorias] of Object.entries(menuData)) {
+      const collapseId = `collapse-${i}`;
+      let bodyHtml = "";
+
+      for (const [subcategoria, items] of Object.entries(subcategorias)) {
+        bodyHtml += `<div class="subcat-title">${subcategoria}</div>`;
+        
+        items.forEach(item => {
+          const safeQuery = item.query.replace(/'/g, "\\'");
+          bodyHtml += `
+            <div class="menu-item" onclick="triggerMenuQuery('${safeQuery}')">
+              <i class="bi bi-circle-fill"></i> ${item.titulo}
+            </div>
+          `;
+        });
+      }
+
+      menuAccordion.innerHTML += `
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+              ${categoria}
+            </button>
+          </h2>
+          <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#menu-accordion">
+            <div class="accordion-body" style="padding: 0 0 15px 0;">
+              ${bodyHtml}
+            </div>
+          </div>
+        </div>
+      `;
+      i++;
+    }
+  }
+
+  function triggerMenuQuery(query) {
+    input.value = ""; 
+    executeQuery(query);
+  }
+
   input.addEventListener("input", () => {
     const val = input.value.toLowerCase().trim();
     sugBox.innerHTML = "";
     if (val.length < 2) { sugBox.style.display = "none"; return; }
     
     const filtrados = listadoKeywords.filter(k => k.includes(val)).slice(0, 5);
-    
     if (filtrados.length > 0) {
       sugBox.style.display = "block";
       filtrados.forEach(f => {
         const div = document.createElement("div");
         div.className = "sug-item";
-        div.innerHTML = `<i class="bi bi-search"></i> ${f}`;
-        
-        // 🚀 ACCIÓN AL HACER CLIC EN LA SUGERENCIA
-        div.onclick = () => {
-          input.value = ""; // LIMPIA EL INPUT INMEDIATAMENTE
-          sugBox.style.display = "none"; 
-          executeQuery(f); 
-        };
+        div.innerHTML = `<i class="bi bi-search me-2 text-warning"></i> ${f}`;
+        div.onclick = () => { input.value = ""; sugBox.style.display = "none"; executeQuery(f); };
         sugBox.appendChild(div);
       });
-    } else { 
-      sugBox.style.display = "none"; 
-    }
+    } else { sugBox.style.display = "none"; }
   });
 
-  // 3. RENDERIZAR MENSAJES Y BOTONES
   function addMsg(text, type) {
     if (!text) return;
     const isBot = type === "bot";
@@ -158,59 +242,34 @@
       actions.forEach(a => {
         const content = a.replace(/[\[\]]/g, "");
         const [query, label] = content.includes("|") ? content.split("|") : [content, content.replaceAll("_", " ")];
-        actionsHtml += `<button class="btn-action" onclick="executeQuery('${query.trim()}')">${label.trim()}</button>`;
+        const safeQuery = query.trim().replace(/"/g, '&quot;').replace(/'/g, "\\'"); 
+        actionsHtml += `<button class="btn-action" onclick="executeQuery('${safeQuery}')">${label.trim()}</button>`;
       });
       actionsHtml += '</div>';
     }
 
-    group.innerHTML = `
-      <div class="avatar ${isBot?'bot-avatar':'user-avatar'}">
-        <i class="bi ${isBot?'bi-robot':'bi-person-fill'}"></i>
-      </div>
-      <div class="msg-content">
-        <div class="bubble ${isBot?'bot-bubble':'user-bubble'}">${finalHtml}</div>
-        ${actionsHtml}
-      </div>`;
-    
+    group.innerHTML = `<div class="avatar ${isBot?'bot-avatar':'user-avatar'}"><i class="bi ${isBot?'bi-robot':'bi-person-fill'}"></i></div>
+      <div class="msg-content"><div class="bubble ${isBot?'bot-bubble':'user-bubble'}">${finalHtml}</div>${actionsHtml}</div>`;
     chat.appendChild(group);
     chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
   }
 
-  // 4. ENVIAR TEXTO MANUAL
-  function handleSend() {
-    const t = input.value.trim();
-    if(t) { 
-      input.value = ""; // LIMPIA EL INPUT AL ENVIAR
-      sugBox.style.display = "none";
-      executeQuery(t); 
-    }
-  }
+  function handleSend() { const t = input.value.trim(); if(t) { input.value = ""; sugBox.style.display = "none"; executeQuery(t); } }
 
-  // 5. CONSULTA AL BACKEND
   async function executeQuery(text) {
     sugBox.style.display = "none";
     addMsg(text, "user");
     typing.style.display = "block";
     input.disabled = true;
-    
     try {
-      const res = await fetch(URL_SCRIPT, { 
-        method: "POST", 
-        body: JSON.stringify({ message: text }) 
-      });
+      const res = await fetch(URL_SCRIPT, { method: "POST", body: JSON.stringify({ message: text }) });
       const data = await res.json();
       typing.style.display = "none";
-      input.disabled = false;
-      input.focus();
+      input.disabled = false; input.focus();
       addMsg(data.reply, "bot");
-    } catch (e) { 
-      typing.style.display = "none";
-      input.disabled = false;
-      addMsg("⚠️ Error de conexión con el servidor.", "bot"); 
-    }
+    } catch (e) { typing.style.display = "none"; input.disabled = false; addMsg("⚠️ Error de conexión.", "bot"); }
   }
 
-  // EVENTOS ADICIONALES
   input.addEventListener("keypress", (e) => { if (e.key === "Enter") handleSend(); });
   document.addEventListener("click", (e) => { if (!e.target.closest('.input-area-wrapper')) sugBox.style.display = "none"; });
 </script>
